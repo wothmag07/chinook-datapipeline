@@ -1,0 +1,5 @@
+npm install
+cubejs create chinook-dashboard -d bigquery
+npm install -g @cubejs-cli/cubejs-cli
+npm i @cubejs-client/core  
+npm install @cubejs-backend/cubestore-driver

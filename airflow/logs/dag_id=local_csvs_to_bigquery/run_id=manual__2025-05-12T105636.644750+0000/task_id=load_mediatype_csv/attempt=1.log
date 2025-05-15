@@ -1,0 +1,10 @@
+{"timestamp":"2025-05-12T10:57:42.859364","level":"info","event":"DAG bundles loaded: dags-folder, example_dags","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager"}
+{"timestamp":"2025-05-12T10:57:42.863679","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/local_csv_to_bq.py","logger":"airflow.models.dagbag.DagBag"}
+{"timestamp":"2025-05-12T10:57:46.279660Z","level":"info","event":"Task instance is in running state","chan":"stdout","logger":"task"}
+{"timestamp":"2025-05-12T10:57:46.288929Z","level":"info","event":" Previous state of the Task instance: queued","chan":"stdout","logger":"task"}
+{"timestamp":"2025-05-12T10:57:46.291537Z","level":"info","event":"Current task name:load_mediatype_csv","chan":"stdout","logger":"task"}
+{"timestamp":"2025-05-12T10:57:46.292600Z","level":"info","event":"Dag name:local_csvs_to_bigquery","chan":"stdout","logger":"task"}
+{"timestamp":"2025-05-12T10:57:54.170583","level":"info","event":"Done. Returned value was: None","logger":"airflow.task.operators.airflow.providers.standard.operators.python.PythonOperator"}
+{"timestamp":"2025-05-12T10:57:54.257074Z","level":"info","event":"Task instance in success state","chan":"stdout","logger":"task"}
+{"timestamp":"2025-05-12T10:57:54.259535Z","level":"info","event":" Previous state of the Task instance: running","chan":"stdout","logger":"task"}
+{"timestamp":"2025-05-12T10:57:54.260894Z","level":"info","event":"Task operator:<Task(PythonOperator): load_mediatype_csv>","chan":"stdout","logger":"task"}

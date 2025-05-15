@@ -1,0 +1,190 @@
+version: 2
+
+sources:
+  - name: chinook_db
+    description: "Raw Chinook tables loaded from BigQuery dataset Chinook_db"
+    database: "{{ target.project }}"
+    schema: chinook_db
+    tables:
+      - name: album
+      - name: artist
+      - name: customer
+      - name: employee
+      - name: genre
+      - name: invoice
+      - name: invoiceline
+      - name: mediatype
+      - name: playlist
+      - name: playlisttrack
+      - name: track
+
+models:
+  - name: stg_customer
+    description: "Staged customers with standardized naming and basic cleaning."
+    columns:
+      - name: customer_id
+        description: "Primary key for customer."
+        tests: [not_null, unique]
+      - name: email
+        description: "Customer e-mail address (lower-cased)."
+        tests: [not_null]
+      - name: support_rep_id
+        description: "Employee id of the assigned support representative."
+        tests:
+          - relationships:
+              to: ref('stg_employee')
+              field: employee_id
+
+  - name: stg_album
+    description: "Album dimension staging."
+    columns:
+      - name: album_id
+        tests: [not_null, unique]
+      - name: album_title
+        tests: [not_null]
+      - name: artist_id
+        tests:
+          - relationships:
+              to: ref('stg_artist')
+              field: artist_id
+
+  - name: stg_artist
+    description: "Artist dimension staging."
+    columns:
+      - name: artist_id
+        tests: [not_null, unique]
+      - name: artist_name
+        tests: [not_null]
+
+  - name: stg_genre
+    description: "Genre dimension staging."
+    columns:
+      - name: genre_id
+        tests: [not_null, unique]
+      - name: genre_name
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Rock', 'Jazz', 'Metal', 'Alternative & Punk', 'Rock And Roll', 'Blues', 'Latin', 'Reggae', 'Pop', 'Soundtrack', 'Bossa Nova', 'Easy Listening', 'Heavy Metal', 'Classical', 'Opera', 'Hip Hop/Rap', 'R&B/Soul', 'Electronica/Dance', 'World', 'Alternative', 'Christian & Gospel', 'Comedy/Spoken', 'Anime', 'JPop', 'Enka']
+              severity: warn
+
+  - name: stg_media_type
+    description: "Media types dimension staging."
+    columns:
+      - name: media_type_id
+        tests: [not_null, unique]
+      - name: media_type_name
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['MPEG audio file', 'Protected AAC audio file', 'Protected MPEG-4 video file', 'Purchased AAC audio file', 'AAC audio file']
+              severity: warn
+
+  - name: stg_track
+    description: "Track facts staging."
+    columns:
+      - name: track_id
+        tests: [not_null, unique]
+      - name: album_id
+        tests:
+          - relationships:
+              to: ref('stg_album')
+              field: album_id
+      - name: media_type_id
+        tests:
+          - relationships:
+              to: ref('stg_media_type')
+              field: media_type_id
+      - name: genre_id
+        tests:
+          - relationships:
+              to: ref('stg_genre')
+              field: genre_id
+      - name: list_price
+        tests:
+          - not_null
+
+  - name: stg_invoice
+    description: "Invoice header staging."
+    columns:
+      - name: invoice_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('stg_customer')
+              field: customer_id
+      - name: invoice_date
+        description: "Date of the invoice."
+        tests: [not_null]
+      - name: invoice_total
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: stg_invoice_line
+    description: "Invoice line items staging."
+    columns:
+      - name: invoice_line_id
+        tests: [not_null, unique]
+      - name: invoice_id
+        tests:
+          - relationships:
+              to: ref('stg_invoice')
+              field: invoice_id
+      - name: track_id
+        tests:
+          - relationships:
+              to: ref('stg_track')
+              field: track_id
+      - name: sale_price
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: quantity
+        description: "Number of units for the track on the invoice line."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+
+  - name: stg_playlist
+    description: "Playlists dimension staging."
+    columns:
+      - name: playlist_id
+        tests: [not_null, unique]
+      - name: playlist_name
+        tests: [not_null]
+
+  - name: stg_playlist_track
+    description: "Bridge between playlists and tracks."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [playlist_id, track_id]
+    columns:
+      - name: playlist_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_playlist')
+              field: playlist_id
+      - name: track_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_track')
+              field: track_id
+
+  - name: stg_employee
+    description: "Staged employee dimension."
+    columns:
+      - name: employee_id
+        tests: [not_null, unique]
+      - name: reports_to
+        description: "Manager employee id."
+        tests:
+          - relationships:
+              to: ref('stg_employee')
+              field: employee_id

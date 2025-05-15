@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+venv/
+.venv/
+env/
+ENV/
+pip-cache/
+pip-log.txt
+.Python
+*.sage.py
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json # Sometimes committed, sometimes not. Add if you don't want to commit.
+# If you want to commit package-lock.json, remove the line above.
+
+# IDE/Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-project
+*.sublime-workspace
+
+# Operating System
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Sensitive information
+keys/
+*.env
+.env.*
+!/.env.example # Allow .env.example files
+secrets/
+credentials/
+*.pem
+*.key
+
+
+# # Airflow
+# logs/ # Airflow logs directory (can conflict with dbt logs if not careful with paths)
+# *.pid # Airflow PIDs
+# __pycache__/ # Already covered by Python section
+# .airflowignore # Usually committed, specifies files Airflow DAG processor should ignore
+
+# Data files (if large or regenerated)
+data/*.csv
+data/*.json 
+
+# Terraform
+# .terraform/
+# *.tfstate
+# *.tfstate.*
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Compiled files
+*.so
+*.dll
+*.o
+
+# Build artifacts
+dist/
+build/ 
+
+package-lock.json
+
+schema/
