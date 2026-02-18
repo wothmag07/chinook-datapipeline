@@ -2,66 +2,112 @@ version: 2
 
 sources:
   - name: chinook_db
-    description: "Raw Chinook tables loaded from BigQuery dataset Chinook_db"
+    description: "Raw Chinook music store tables loaded into BigQuery."
     database: "{{ target.project }}"
     schema: chinook_db
+    freshness:
+      warn_after: {count: 48, period: hour}
+      error_after: {count: 168, period: hour}
     tables:
       - name: album
+        description: "Albums in the music catalog."
       - name: artist
+        description: "Musical artists."
       - name: customer
+        description: "Customer records."
       - name: employee
+        description: "Employee/staff records."
       - name: genre
+        description: "Music genre classifications."
       - name: invoice
+        description: "Sales invoice headers."
+        loaded_at_field: invoicedate
       - name: invoiceline
+        description: "Individual line items within invoices."
       - name: mediatype
+        description: "Media format types (e.g., MPEG, AAC)."
       - name: playlist
+        description: "Named playlists."
       - name: playlisttrack
+        description: "Many-to-many relationship between playlists and tracks."
       - name: track
+        description: "Individual music tracks."
 
 models:
   - name: stg_customer
-    description: "Staged customers with standardized naming and basic cleaning."
+    description: "Staged customers with standardized naming, trimmed strings, and consistent casing."
     columns:
       - name: customer_id
         description: "Primary key for customer."
         tests: [not_null, unique]
+      - name: first_name
+        description: "Customer first name (trimmed)."
+        tests: [not_null]
+      - name: last_name
+        description: "Customer last name (trimmed)."
+        tests: [not_null]
+      - name: company
+        description: "Company the customer is associated with. Nullable."
+      - name: address
+        description: "Street address of the customer."
+      - name: city
+        description: "City of the customer."
+      - name: state
+        description: "State or province of the customer. Nullable."
+      - name: country
+        description: "Country of the customer (uppercased for consistency)."
+        tests: [not_null]
+      - name: postal_code
+        description: "Postal or zip code. Nullable."
+      - name: phone
+        description: "Phone number of the customer. Nullable."
+      - name: fax
+        description: "Fax number of the customer. Nullable."
       - name: email
-        description: "Customer e-mail address (lower-cased)."
+        description: "Customer email address (lowercased for consistency)."
         tests: [not_null]
       - name: support_rep_id
-        description: "Employee id of the assigned support representative."
+        description: "Employee ID of the assigned support representative."
         tests:
           - relationships:
               to: ref('stg_employee')
               field: employee_id
 
   - name: stg_album
-    description: "Album dimension staging."
+    description: "Staged album records with standardized naming."
     columns:
       - name: album_id
+        description: "Primary key for album."
         tests: [not_null, unique]
       - name: album_title
+        description: "Title of the album (trimmed)."
         tests: [not_null]
       - name: artist_id
+        description: "Foreign key to the artist who created the album."
         tests:
+          - not_null
           - relationships:
               to: ref('stg_artist')
               field: artist_id
 
   - name: stg_artist
-    description: "Artist dimension staging."
+    description: "Staged artist records with standardized naming."
     columns:
       - name: artist_id
+        description: "Primary key for artist."
         tests: [not_null, unique]
       - name: artist_name
+        description: "Name of the artist or band."
         tests: [not_null]
 
   - name: stg_genre
-    description: "Genre dimension staging."
+    description: "Staged genre reference data."
     columns:
       - name: genre_id
+        description: "Primary key for genre."
         tests: [not_null, unique]
       - name: genre_name
+        description: "Name of the music genre."
         tests:
           - not_null
           - accepted_values:
@@ -69,11 +115,13 @@ models:
               severity: warn
 
   - name: stg_media_type
-    description: "Media types dimension staging."
+    description: "Staged media type reference data."
     columns:
       - name: media_type_id
+        description: "Primary key for media type."
         tests: [not_null, unique]
       - name: media_type_name
+        description: "Name of the media format."
         tests:
           - not_null
           - accepted_values:
@@ -81,96 +129,146 @@ models:
               severity: warn
 
   - name: stg_track
-    description: "Track facts staging."
+    description: "Staged track records with semantic column renames."
     columns:
       - name: track_id
+        description: "Primary key for track."
         tests: [not_null, unique]
+      - name: track_name
+        description: "Name of the track."
+        tests: [not_null]
+      - name: composer
+        description: "Composer of the track. Nullable."
+      - name: duration_ms
+        description: "Track duration in milliseconds."
+        tests: [not_null]
+      - name: file_size
+        description: "Track file size in bytes."
+      - name: list_price
+        description: "Catalog list price per unit."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
       - name: album_id
+        description: "Foreign key to the album the track belongs to."
         tests:
           - relationships:
               to: ref('stg_album')
               field: album_id
       - name: media_type_id
+        description: "Foreign key to the media type."
         tests:
+          - not_null
           - relationships:
               to: ref('stg_media_type')
               field: media_type_id
       - name: genre_id
+        description: "Foreign key to the genre."
         tests:
+          - not_null
           - relationships:
               to: ref('stg_genre')
               field: genre_id
-      - name: list_price
-        tests:
-          - not_null
 
   - name: stg_invoice
-    description: "Invoice header staging."
+    description: "Staged invoice headers with date casting and consistent country casing."
     columns:
       - name: invoice_id
+        description: "Primary key for invoice."
         tests: [not_null, unique]
       - name: customer_id
+        description: "Foreign key to the customer who placed the order."
         tests:
+          - not_null
           - relationships:
               to: ref('stg_customer')
               field: customer_id
       - name: invoice_date
-        description: "Date of the invoice."
+        description: "Date the invoice was created (cast to DATE)."
         tests: [not_null]
+      - name: billing_address
+        description: "Billing street address."
+      - name: billing_city
+        description: "Billing city."
+      - name: billing_state
+        description: "Billing state or province. Nullable."
+      - name: billing_country
+        description: "Billing country (uppercased for consistency)."
+        tests: [not_null]
+      - name: billing_postal_code
+        description: "Billing postal code. Nullable."
       - name: invoice_total
+        description: "Total amount of the invoice."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
 
   - name: stg_invoice_line
-    description: "Invoice line items staging."
+    description: "Staged invoice line items."
     columns:
       - name: invoice_line_id
+        description: "Primary key for invoice line."
         tests: [not_null, unique]
       - name: invoice_id
+        description: "Foreign key to the parent invoice."
         tests:
+          - not_null
           - relationships:
               to: ref('stg_invoice')
               field: invoice_id
       - name: track_id
+        description: "Foreign key to the track sold."
         tests:
+          - not_null
           - relationships:
               to: ref('stg_track')
               field: track_id
       - name: sale_price
+        description: "Actual sale price per unit for this line item."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
       - name: quantity
-        description: "Number of units for the track on the invoice line."
+        description: "Number of units of the track on this line."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: "> 0"
+      - name: line_total
+        description: "Computed line total (sale_price * quantity). Pre-calculated for downstream reuse."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
 
   - name: stg_playlist
-    description: "Playlists dimension staging."
+    description: "Staged playlist records."
     columns:
       - name: playlist_id
+        description: "Primary key for playlist."
         tests: [not_null, unique]
       - name: playlist_name
+        description: "Name of the playlist."
         tests: [not_null]
 
   - name: stg_playlist_track
-    description: "Bridge between playlists and tracks."
+    description: "Bridge table linking playlists to tracks (many-to-many)."
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [playlist_id, track_id]
     columns:
       - name: playlist_id
+        description: "Foreign key to the playlist."
         tests:
           - not_null
           - relationships:
               to: ref('stg_playlist')
               field: playlist_id
       - name: track_id
+        description: "Foreign key to the track."
         tests:
           - not_null
           - relationships:
@@ -178,13 +276,45 @@ models:
               field: track_id
 
   - name: stg_employee
-    description: "Staged employee dimension."
+    description: "Staged employee records with date casting and consistent casing."
     columns:
       - name: employee_id
+        description: "Primary key for employee."
         tests: [not_null, unique]
+      - name: first_name
+        description: "Employee first name."
+        tests: [not_null]
+      - name: last_name
+        description: "Employee last name."
+        tests: [not_null]
+      - name: title
+        description: "Job title of the employee."
       - name: reports_to
-        description: "Manager employee id."
+        description: "Employee ID of this employee's manager. Null for top-level."
         tests:
           - relationships:
               to: ref('stg_employee')
               field: employee_id
+      - name: birth_date
+        description: "Date of birth (cast to DATE)."
+        tests: [not_null]
+      - name: hire_date
+        description: "Hire date (cast to DATE)."
+        tests: [not_null]
+      - name: email
+        description: "Employee email address (lowercased)."
+        tests: [not_null]
+      - name: phone
+        description: "Employee phone number. Nullable."
+      - name: fax
+        description: "Employee fax number. Nullable."
+      - name: address
+        description: "Street address."
+      - name: city
+        description: "City."
+      - name: state
+        description: "State or province."
+      - name: country
+        description: "Country (uppercased for consistency)."
+      - name: postal_code
+        description: "Postal code."

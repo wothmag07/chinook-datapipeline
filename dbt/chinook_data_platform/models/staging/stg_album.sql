@@ -1,13 +1,11 @@
-with source as (
+with album as (
     select * from {{ source('chinook_db', 'album') }}
 ),
-
-renamed as (
+final as (
     select
         albumid as album_id,
-        title as album_title,
+        trim(title) as album_title,
         artistid as artist_id
-    from source
+    from album
 )
-
-select * from renamed
+select * from final

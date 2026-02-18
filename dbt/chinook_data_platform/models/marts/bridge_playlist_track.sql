@@ -1,28 +1,34 @@
--- Dimension model joining playlists, tracks, albums, artists, genres, and media types
-
 with playlists as (
-    select * from {{ ref('stg_playlist') }}
+    select playlist_id, playlist_name
+    from {{ ref('stg_playlist') }}
 ),
 playlist_tracks as (
-    select * from {{ ref('stg_playlist_track') }}
+    select playlist_id, track_id
+    from {{ ref('stg_playlist_track') }}
 ),
 tracks as (
-    select * from {{ ref('stg_track') }}
+    select track_id, track_name, list_price, duration_ms, album_id, genre_id, media_type_id
+    from {{ ref('stg_track') }}
 ),
 albums as (
-    select * from {{ ref('stg_album') }}
+    select album_id, album_title, artist_id
+    from {{ ref('stg_album') }}
 ),
 artists as (
-    select * from {{ ref('stg_artist') }}
+    select artist_id, artist_name
+    from {{ ref('stg_artist') }}
 ),
 genres as (
-    select * from {{ ref('stg_genre') }}
+    select genre_id, genre_name
+    from {{ ref('stg_genre') }}
 ),
 media_types as (
-    select * from {{ ref('stg_media_type') }}
+    select media_type_id, media_type_name
+    from {{ ref('stg_media_type') }}
 ),
 final as (
     select
+        {{ dbt_utils.generate_surrogate_key(['pl.playlist_id', 'pt.track_id']) }} as playlist_track_key,
         pl.playlist_id,
         pl.playlist_name,
         pt.track_id,

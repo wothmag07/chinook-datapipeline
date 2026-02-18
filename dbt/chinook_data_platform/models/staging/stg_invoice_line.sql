@@ -7,7 +7,8 @@ final as (
         invoiceid as invoice_id,
         trackid as track_id,
         unitprice as sale_price,
-        quantity
+        quantity,
+        unitprice * quantity as line_total
     from invoice_line
 )
 select * from final

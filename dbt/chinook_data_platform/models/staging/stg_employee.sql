@@ -4,20 +4,20 @@ with employee as (
 final as (
     select
         employeeid as employee_id,
-        lastname as last_name,
-        firstname as first_name,
-        title,
+        trim(firstname) as first_name,
+        trim(lastname) as last_name,
+        trim(title) as title,
         reportsto as reports_to,
         cast(birthdate as date) as birth_date,
         cast(hiredate as date) as hire_date,
-        address,
-        city,
-        state,
-        country,
-        postalcode as postal_code,
-        phone,
-        fax,
-        email
+        trim(address) as address,
+        trim(city) as city,
+        trim(state) as state,
+        upper(trim(country)) as country,
+        trim(postalcode) as postal_code,
+        trim(phone) as phone,
+        trim(fax) as fax,
+        lower(trim(email)) as email
     from employee
 )
 select * from final

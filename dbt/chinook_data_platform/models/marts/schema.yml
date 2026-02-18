@@ -2,37 +2,62 @@ version: 2
 
 models:
   - name: fact_sales
-    description: "Line-level sales fact table, storing transactional sales data."
+    description: "Line-level sales fact table. Grain: one row per invoice line item."
     columns:
+      - name: sale_key
+        description: "Surrogate key for this fact record."
+        tests: [not_null, unique]
       - name: invoice_line_id
-        description: "Unique identifier for the invoice line, primary key of this fact table."
+        description: "Natural key from the source invoice line."
         tests: [not_null, unique]
       - name: invoice_id
-        description: "Identifier for the invoice associated with this line item."
-        tests: 
-          - not_null
-          # - relationships: {to: ref('dim_invoices'), field: invoice_id} # If a dim_invoices existed
+        description: "Degenerate dimension: the parent invoice identifier."
+        tests: [not_null]
       - name: track_id
-        description: "Identifier for the track sold."
+        description: "Foreign key to dim_tracks."
         tests:
           - not_null
           - relationships:
               to: ref('dim_tracks')
               field: track_id
+      - name: album_id
+        description: "Foreign key to dim_album."
+        tests:
+          - relationships:
+              to: ref('dim_album')
+              field: album_id
+      - name: genre_id
+        description: "Foreign key to dim_genres."
+        tests:
+          - relationships:
+              to: ref('dim_genres')
+              field: genre_id
+      - name: media_type_id
+        description: "Foreign key to dim_media_types."
+        tests:
+          - relationships:
+              to: ref('dim_media_types')
+              field: media_type_id
       - name: customer_id
-        description: "Identifier for the customer who made the purchase."
+        description: "Foreign key to dim_customers."
         tests:
           - not_null
           - relationships:
               to: ref('dim_customers')
               field: customer_id
+      - name: employee_id
+        description: "Foreign key to dim_employees (support rep who owns the customer)."
+        tests:
+          - relationships:
+              to: ref('dim_employees')
+              field: employee_id
       - name: invoice_date
-        description: "Date of the invoice."
+        description: "Date of the invoice. Foreign key to dim_date."
         tests:
           - not_null
           - relationships:
               to: ref('dim_date')
-              field: date # dim_date's primary key is 'date'
+              field: date
       - name: quantity
         description: "Number of units of the track sold in this line item."
         tests:
@@ -40,7 +65,7 @@ models:
           - dbt_utils.expression_is_true:
               expression: "> 0"
       - name: sale_price
-        description: "Sale price per unit for the track in this line item."
+        description: "Sale price per unit."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
@@ -52,366 +77,12 @@ models:
           - dbt_utils.expression_is_true:
               expression: ">= 0"
 
-  - name: dim_employees
-    description: "Employee dimension with calculated age and experience."
-    columns:
-      - name: employee_id
-        description: "Unique identifier for the employee."
-        tests: [not_null, unique]
-      - name: first_name
-        description: "First name of the employee."
-        tests: [not_null]
-      - name: last_name
-        description: "Last name of the employee."
-        tests: [not_null]
-      - name: title
-        description: "Job title of the employee."
-      - name: reports_to
-        description: "Identifier of the employee's manager."
-        tests:
-          - relationships:
-              to: ref('dim_employees') # Self-referencing FK
-              field: employee_id
-      - name: birth_date
-        description: "Birth date of the employee."
-        tests: [not_null]
-      - name: age
-        description: "Current age of the employee in years."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: hire_date
-        description: "Hire date of the employee."
-        tests: [not_null]
-      - name: experience_years
-        description: "Current experience of the employee in years."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: address
-        description: "Address of the employee."
-      - name: city
-        description: "City of the employee."
-      - name: state
-        description: "State of the employee."
-      - name: country
-        description: "Country of the employee."
-      - name: postal_code
-        description: "Postal code of the employee."
-      - name: phone
-        description: "Phone number of the employee."
-      - name: fax
-        description: "Fax number of the employee."
-      - name: email
-        description: "Email address of the employee."
-      - name: revenue
-        description: "Total revenue from sales attributed to the employee (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: invoices_handled
-        description: "Number of distinct invoices handled by the employee (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: lines_handled
-        description: "Number of invoice lines handled by the employee (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: avg_revenue_per_invoice
-        description: "Average revenue per invoice for the employee. Null if no invoices handled."
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: "avg_revenue_per_invoice is null or avg_revenue_per_invoice >= 0"
-
-  - name: dim_playlists
-    description: "Playlist items dimension, detailing tracks within each playlist along with their attributes."
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [playlist_id, track_id]
-    columns:
-      - name: playlist_id
-        description: "Identifier for the playlist."
-        tests: [not_null]
-      - name: playlist_name
-        description: "Name of the playlist."
-        tests: [not_null]
-      - name: track_id
-        description: "Identifier for the track in the playlist."
-        tests: [not_null]
-      - name: track_name
-        description: "Name of the track."
-        tests: [not_null]
-      - name: list_price
-        description: "List price of the track."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: duration_ms
-        description: "Duration of the track in milliseconds."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: album_title
-        description: "Title of the album for the track."
-      - name: artist_name
-        description: "Name of the artist for the track."
-      - name: genre_name
-        description: "Name of the genre for the track."
-      - name: media_type_name
-        description: "Name of the media type for the track."
-
-  - name: dim_customers
-    description: "Customer dimension including lifetime value and support rep info."
-    columns:
-      - name: customer_id
-        description: "Unique identifier for the customer."
-        tests: [not_null, unique]
-      - name: first_name
-        description: "First name of the customer."
-        tests: [not_null]
-      - name: last_name
-        description: "Last name of the customer."
-        tests: [not_null]
-      - name: company
-        description: "Company the customer works for, if any."
-      - name: country
-        description: "Country of the customer."
-      - name: city
-        description: "City of the customer."
-      - name: state
-        description: "State of the customer."
-      - name: postal_code
-        description: "Postal code of the customer."
-      - name: email
-        description: "Email address of the customer."
-        tests: [not_null]
-      - name: phone
-        description: "Phone number of the customer."
-      - name: support_rep_id
-        description: "Identifier of the support representative assigned to the customer."
-        # tests: [{relationships: {to: ref('dim_employees'), field: employee_id}}] # Optional test
-      - name: rep_first_name
-        description: "First name of the support representative."
-      - name: rep_last_name
-        description: "Last name of the support representative."
-      - name: rep_title
-        description: "Title of the support representative."
-      - name: customer_lifetime_value
-        description: "Total lifetime value generated from the customer. Null if no orders."
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: order_count
-        description: "Total number of orders placed by the customer. Null if no orders."
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: avg_order_value
-        description: "Average value of orders placed by the customer. Null if no orders."
-        tests:
-          - dbt_utils.expression_is_true:
-              # This allows for NULL or >= 0
-              expression: "avg_order_value is null or avg_order_value >= 0"
-
-  - name: dim_tracks
-    description: "Track dimension enriched with album, artist, genre, media type, and sales metrics."
-    columns:
-      - name: track_id
-        description: "Unique identifier for the track."
-        tests: [not_null, unique]
-      - name: track_name
-        description: "Name of the track."
-        tests: [not_null]
-      - name: list_price
-        description: "List price of the track."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: duration_ms
-        description: "Duration of the track in milliseconds."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: file_size
-        description: "File size of the track in bytes."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: album_id
-        description: "Identifier for the album of the track."
-        tests: 
-          - not_null
-          # - relationships: {to: ref('dim_album'), field: album_id}
-      - name: album_title
-        description: "Title of the album."
-        # tests: [not_null] # Can be null if album_id is null and not caught by stg test
-      - name: artist_id
-        description: "Identifier for the artist of the track (via album)."
-        # tests: [not_null] # Can be null if album or artist is null
-      - name: artist_name
-        description: "Name of the artist of the track (via album)."
-        # tests: [not_null]
-      - name: genre_id
-        description: "Identifier for the genre of the track."
-        tests: 
-          - not_null
-          # - relationships: {to: ref('dim_genres'), field: genre_id}
-      - name: genre_name
-        description: "Name of the genre."
-        # tests: [not_null]
-      - name: media_type_id
-        description: "Identifier for the media type of the track."
-        tests: 
-          - not_null
-          # - relationships: {to: ref('dim_media_types'), field: media_type_id}
-      - name: media_type_name
-        description: "Name of the media type."
-        # tests: [not_null]
-      - name: units_sold
-        description: "Total units of the track sold (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: revenue
-        description: "Total revenue generated from the track (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: first_sold_date
-        description: "The date the track was first sold. Null if never sold."
-      - name: last_sold_date
-        description: "The date the track was last sold. Null if never sold."
-      - name: avg_sale_price
-        description: "Average sale price of the track. Null if not sold."
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: "avg_sale_price is null or avg_sale_price >= 0"
-
-  - name: dim_album
-    description: "Album dimension enriched with artist information and sales metrics."
-    columns:
-      - name: album_id
-        description: "Unique identifier for the album."
-        tests: [not_null, unique]
-      - name: album_title
-        description: "Title of the album."
-        tests: [not_null]
-      - name: artist_id
-        description: "Identifier for the artist of the album."
-        tests: 
-          - not_null
-          # - relationships: {to: ref('dim_artists'), field: artist_id} # if dim_artists exists
-      - name: artist_name
-        description: "Name of the artist of the album."
-        tests: [not_null]
-      - name: units_sold
-        description: "Total units sold for the album (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: revenue
-        description: "Total revenue generated from the album (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-
-  - name: dim_genres
-    description: "Genre dimension with sales metrics."
-    columns:
-      - name: genre_id
-        description: "Unique identifier for the genre."
-        tests: [not_null, unique]
-      - name: genre_name
-        description: "Name of the genre."
-        tests: [not_null]
-      - name: units_sold
-        description: "Total units sold for the genre (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: revenue
-        description: "Total revenue generated from the genre (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-
-  - name: dim_media_types
-    description: "Media types dimension with sales metrics."
-    columns:
-      - name: media_type_id
-        description: "Unique identifier for the media type."
-        tests: [not_null, unique]
-      - name: media_type_name
-        description: "Name of the media type."
-        tests: [not_null]
-      - name: units_sold
-        description: "Total units sold for the media type (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: revenue
-        description: "Total revenue generated from the media type (coalesced to 0)."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-
-  - name: dim_date
-    description: "Calendar dimension generated from date spine."
-    columns:
-      - name: date
-        description: "The specific date, serving as the unique key."
-        tests: [not_null, unique]
-      - name: year
-        description: "Year component of the date (e.g., 2023)."
-        tests: [not_null]
-      - name: month
-        description: "Month component of the date (1-12)."
-        tests: [not_null]
-      - name: day
-        description: "Day of the month component of the date (1-31)."
-        tests: [not_null]
-      - name: year_month
-        description: "Year and month in YYYY-MM format (e.g., 2023-01)."
-        tests: [not_null]
-      - name: date_iso
-        description: "Date in ISO format (YYYY-MM-DD)."
-        tests: [not_null]
-      - name: iso_week
-        description: "ISO week number of the year (1-53)."
-        tests: [not_null]
-      - name: quarter
-        description: "Quarter of the year (1-4)."
-        tests: [not_null]
-      - name: is_weekend
-        description: "Boolean indicating if the date is a weekend day."
-        tests: [not_null]
-
   - name: fact_daily_sales
-    description: "Daily aggregated sales fact, sourced from intermediate daily sales."
+    description: "Daily aggregated sales fact. Grain: one row per calendar day with sales activity."
     columns:
       - name: sales_date
-        description: "Date of the aggregated sales, serves as the primary key and foreign key to dim_date."
-        tests: 
+        description: "Date of the aggregated sales. Primary key and FK to dim_date."
+        tests:
           - not_null
           - unique
           - relationships:
@@ -423,8 +94,8 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
-      - name: lines
-        description: "Total number of invoice lines for the day."
+      - name: line_items
+        description: "Total number of invoice line items for the day."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
@@ -434,4 +105,476 @@ models:
         tests:
           - not_null
           - dbt_utils.expression_is_true:
-              expression: ">= 0" 
+              expression: ">= 0"
+      - name: unique_customers
+        description: "Number of distinct customers who made a purchase on the day."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: avg_order_value
+        description: "Average revenue per invoice for the day. Null if no invoices."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or avg_order_value >= 0"
+
+  - name: dim_customers
+    description: "Customer dimension enriched with support rep info and lifetime value metrics."
+    columns:
+      - name: customer_key
+        description: "Surrogate key for the customer dimension."
+        tests: [not_null, unique]
+      - name: customer_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: first_name
+        description: "Customer first name."
+        tests: [not_null]
+      - name: last_name
+        description: "Customer last name."
+        tests: [not_null]
+      - name: full_name
+        description: "Concatenated full name (first_name + last_name)."
+        tests: [not_null]
+      - name: company
+        description: "Company the customer is associated with. Nullable."
+      - name: country
+        description: "Country of the customer (uppercased)."
+      - name: city
+        description: "City of the customer."
+      - name: state
+        description: "State or province of the customer. Nullable."
+      - name: postal_code
+        description: "Postal or zip code. Nullable."
+      - name: email
+        description: "Customer email address (lowercased)."
+        tests: [not_null]
+      - name: phone
+        description: "Customer phone number. Nullable."
+      - name: support_rep_id
+        description: "FK to dim_employees: the assigned support representative."
+        tests:
+          - relationships:
+              to: ref('dim_employees')
+              field: employee_id
+      - name: rep_first_name
+        description: "First name of the assigned support representative."
+      - name: rep_last_name
+        description: "Last name of the assigned support representative."
+      - name: rep_title
+        description: "Job title of the assigned support representative."
+      - name: first_order_date
+        description: "Date of the customer's first order. Null if no orders."
+      - name: last_order_date
+        description: "Date of the customer's most recent order. Null if no orders."
+      - name: customer_lifetime_value
+        description: "Total revenue generated from this customer. Null if no orders."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or customer_lifetime_value >= 0"
+      - name: order_count
+        description: "Total number of orders placed. Null if no orders."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or order_count >= 0"
+      - name: avg_order_value
+        description: "Average order value. Null if no orders."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or avg_order_value >= 0"
+
+  - name: dim_employees
+    description: "Employee dimension with computed age, experience, and sales performance metrics."
+    columns:
+      - name: employee_key
+        description: "Surrogate key for the employee dimension."
+        tests: [not_null, unique]
+      - name: employee_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: first_name
+        description: "Employee first name."
+        tests: [not_null]
+      - name: last_name
+        description: "Employee last name."
+        tests: [not_null]
+      - name: full_name
+        description: "Concatenated full name (first_name + last_name)."
+        tests: [not_null]
+      - name: title
+        description: "Job title of the employee."
+      - name: reports_to
+        description: "Employee ID of this employee's manager (self-referencing FK)."
+        tests:
+          - relationships:
+              to: ref('dim_employees')
+              field: employee_id
+      - name: birth_date
+        description: "Date of birth."
+        tests: [not_null]
+      - name: age
+        description: "Approximate age in years (computed from birth_date, non-deterministic)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: hire_date
+        description: "Date the employee was hired."
+        tests: [not_null]
+      - name: experience_years
+        description: "Approximate years of experience (computed from hire_date, non-deterministic)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: address
+        description: "Street address of the employee."
+      - name: city
+        description: "City of the employee."
+      - name: state
+        description: "State or province of the employee."
+      - name: country
+        description: "Country of the employee (uppercased)."
+      - name: postal_code
+        description: "Postal code of the employee."
+      - name: phone
+        description: "Phone number of the employee."
+      - name: fax
+        description: "Fax number of the employee."
+      - name: email
+        description: "Email address of the employee (lowercased)."
+      - name: revenue
+        description: "Total revenue from sales attributed to the employee (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: invoices_handled
+        description: "Number of distinct invoices handled (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: lines_handled
+        description: "Number of invoice lines handled (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: avg_revenue_per_invoice
+        description: "Average revenue per invoice. Null if no invoices handled."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or avg_revenue_per_invoice >= 0"
+
+  - name: dim_tracks
+    description: "Track dimension enriched with album, artist, genre, media type, and sales metrics."
+    columns:
+      - name: track_key
+        description: "Surrogate key for the track dimension."
+        tests: [not_null, unique]
+      - name: track_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: track_name
+        description: "Name of the track."
+        tests: [not_null]
+      - name: composer
+        description: "Composer of the track. Nullable."
+      - name: list_price
+        description: "Catalog list price per unit."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: duration_ms
+        description: "Track duration in milliseconds."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: duration_minutes
+        description: "Track duration in minutes (computed from duration_ms)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: file_size
+        description: "File size in bytes."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: album_id
+        description: "FK to dim_album."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_album')
+              field: album_id
+      - name: album_title
+        description: "Denormalized album title."
+      - name: artist_id
+        description: "FK to dim_artists (via album)."
+        tests:
+          - relationships:
+              to: ref('dim_artists')
+              field: artist_id
+      - name: artist_name
+        description: "Denormalized artist name."
+      - name: genre_id
+        description: "FK to dim_genres."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_genres')
+              field: genre_id
+      - name: genre_name
+        description: "Denormalized genre name."
+      - name: media_type_id
+        description: "FK to dim_media_types."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_media_types')
+              field: media_type_id
+      - name: media_type_name
+        description: "Denormalized media type name."
+      - name: units_sold
+        description: "Total units of the track sold (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: revenue
+        description: "Total revenue from this track (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: first_sold_date
+        description: "Date the track was first sold. Null if never sold."
+      - name: last_sold_date
+        description: "Date the track was last sold. Null if never sold."
+      - name: avg_sale_price
+        description: "Average actual sale price. Null if never sold."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or avg_sale_price >= 0"
+
+  - name: dim_album
+    description: "Album dimension enriched with artist info and sales metrics."
+    columns:
+      - name: album_key
+        description: "Surrogate key for the album dimension."
+        tests: [not_null, unique]
+      - name: album_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: album_title
+        description: "Title of the album."
+        tests: [not_null]
+      - name: artist_id
+        description: "FK to dim_artists."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_artists')
+              field: artist_id
+      - name: artist_name
+        description: "Denormalized artist name."
+        tests: [not_null]
+      - name: units_sold
+        description: "Total units sold for the album (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: revenue
+        description: "Total revenue from the album (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: dim_artists
+    description: "Artist dimension with aggregated album count and sales metrics."
+    columns:
+      - name: artist_key
+        description: "Surrogate key for the artist dimension."
+        tests: [not_null, unique]
+      - name: artist_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: artist_name
+        description: "Name of the artist or band."
+        tests: [not_null]
+      - name: number_of_albums
+        description: "Total number of albums by this artist."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: total_units_sold_by_artist
+        description: "Total units sold across all albums."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: total_revenue_by_artist
+        description: "Total revenue generated from all albums."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: dim_genres
+    description: "Genre dimension with sales metrics."
+    columns:
+      - name: genre_key
+        description: "Surrogate key for the genre dimension."
+        tests: [not_null, unique]
+      - name: genre_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: genre_name
+        description: "Name of the genre."
+        tests: [not_null]
+      - name: units_sold
+        description: "Total units sold for the genre (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: revenue
+        description: "Total revenue from the genre (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: dim_media_types
+    description: "Media type dimension with sales metrics."
+    columns:
+      - name: media_type_key
+        description: "Surrogate key for the media type dimension."
+        tests: [not_null, unique]
+      - name: media_type_id
+        description: "Natural key from the source system."
+        tests: [not_null, unique]
+      - name: media_type_name
+        description: "Name of the media format."
+        tests: [not_null]
+      - name: units_sold
+        description: "Total units sold for the media type (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: revenue
+        description: "Total revenue from the media type (default 0)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: dim_date
+    description: "Calendar dimension generated from date spine (2005-2030)."
+    columns:
+      - name: date_key
+        description: "Surrogate key for the date dimension."
+        tests: [not_null, unique]
+      - name: date
+        description: "Calendar date (natural key)."
+        tests: [not_null, unique]
+      - name: year
+        description: "Year (e.g., 2023)."
+        tests: [not_null]
+      - name: month
+        description: "Month number (1-12)."
+        tests: [not_null]
+      - name: day
+        description: "Day of month (1-31)."
+        tests: [not_null]
+      - name: year_month
+        description: "Year-month in YYYY-MM format."
+        tests: [not_null]
+      - name: date_iso
+        description: "Date in ISO YYYY-MM-DD format."
+        tests: [not_null]
+      - name: day_name
+        description: "Full day name (e.g., Monday)."
+        tests: [not_null]
+      - name: month_name
+        description: "Full month name (e.g., January)."
+        tests: [not_null]
+      - name: iso_week
+        description: "ISO 8601 week number (1-53)."
+        tests: [not_null]
+      - name: quarter
+        description: "Quarter of the year (1-4)."
+        tests: [not_null]
+      - name: day_of_year
+        description: "Day of year (1-366)."
+        tests: [not_null]
+      - name: day_of_week
+        description: "Day of week number (1=Sunday, 7=Saturday in BigQuery)."
+        tests: [not_null]
+      - name: first_day_of_month
+        description: "First day of the month this date belongs to."
+        tests: [not_null]
+      - name: last_day_of_month
+        description: "Last day of the month this date belongs to."
+        tests: [not_null]
+      - name: first_day_of_week
+        description: "Monday of the ISO week this date belongs to."
+        tests: [not_null]
+      - name: is_weekend
+        description: "True if Saturday or Sunday, false otherwise."
+        tests: [not_null]
+
+  - name: bridge_playlist_track
+    description: "Bridge table linking playlists to tracks with denormalized track attributes."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [playlist_id, track_id]
+    columns:
+      - name: playlist_track_key
+        description: "Surrogate key for the playlist-track combination."
+        tests: [not_null, unique]
+      - name: playlist_id
+        description: "FK to stg_playlist."
+        tests: [not_null]
+      - name: playlist_name
+        description: "Name of the playlist."
+        tests: [not_null]
+      - name: track_id
+        description: "FK to dim_tracks."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_tracks')
+              field: track_id
+      - name: track_name
+        description: "Name of the track."
+        tests: [not_null]
+      - name: list_price
+        description: "List price of the track."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: duration_ms
+        description: "Duration of the track in milliseconds."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: album_title
+        description: "Title of the album the track belongs to."
+      - name: artist_name
+        description: "Name of the artist."
+      - name: genre_name
+        description: "Genre of the track."
+      - name: media_type_name
+        description: "Media type of the track."

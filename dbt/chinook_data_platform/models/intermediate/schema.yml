@@ -2,14 +2,15 @@ version: 2
 
 models:
   - name: int_customer_orders
-    description: "Aggregated order metrics at customer grain."
+    description: "Aggregated order metrics at customer grain: lifetime value and order count."
     columns:
       - name: customer_id
+        description: "Customer identifier (grain column)."
         tests:
           - not_null
           - unique
       - name: customer_lifetime_value
-        description: "Total revenue generated from the customer."
+        description: "Total revenue generated from the customer across all orders."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
@@ -20,24 +21,32 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
+      - name: first_order_date
+        description: "Date of the customer's first order."
+        tests: [not_null]
+      - name: last_order_date
+        description: "Date of the customer's most recent order."
+        tests: [not_null]
+
   - name: int_track_sales
-    description: "Aggregated sales metrics at track grain."
+    description: "Aggregated sales metrics at track grain: units sold, revenue, order count, and date range."
     columns:
       - name: track_id
-        description: "Identifier for the track."
+        description: "Track identifier (grain column)."
         tests:
           - not_null
+          - unique
       - name: track_name
         description: "Name of the track."
         tests: [not_null]
       - name: album_id
-        description: "Identifier for the album of the track."
+        description: "Album the track belongs to."
         tests: [not_null]
       - name: media_type_id
-        description: "Identifier for the media type of the track."
+        description: "Media type of the track."
         tests: [not_null]
       - name: genre_id
-        description: "Identifier for the genre of the track."
+        description: "Genre of the track."
         tests: [not_null]
       - name: units_sold
         description: "Total units of the track sold."
@@ -52,22 +61,23 @@ models:
           - dbt_utils.expression_is_true:
               expression: ">= 0"
       - name: first_sold_date
-        description: "The date the track was first sold."
+        description: "Date the track was first sold."
         tests: [not_null]
       - name: last_sold_date
-        description: "The date the track was last sold."
+        description: "Date the track was last sold."
         tests: [not_null]
       - name: order_count
-        description: "Total number of distinct orders including the track."
+        description: "Number of distinct invoices that included this track."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
+
   - name: int_employee_sales
-    description: "Sales performance metrics per employee/support rep."
+    description: "Sales performance metrics per employee (support rep)."
     columns:
       - name: employee_id
-        description: "Identifier for the employee (support rep)."
+        description: "Employee identifier (grain column)."
         tests:
           - not_null
           - unique
@@ -80,28 +90,29 @@ models:
       - name: title
         description: "Job title of the employee."
       - name: revenue
-        description: "Total revenue attributed to sales supported by the employee."
+        description: "Total revenue attributed to customers supported by this employee."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
       - name: invoices_handled
-        description: "Number of distinct invoices handled by the employee."
+        description: "Number of distinct invoices for customers supported by this employee."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
       - name: lines_handled
-        description: "Number of invoice lines handled by the employee."
+        description: "Total invoice line items for customers supported by this employee."
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
+
   - name: int_album_sales
-    description: "Intermediate aggregation of sales per album."
+    description: "Aggregated sales per album: total units sold and revenue."
     columns:
       - name: album_id
-        description: "Identifier for the album."
+        description: "Album identifier (grain column)."
         tests:
           - not_null
           - unique
@@ -117,11 +128,12 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
+
   - name: int_genre_sales
-    description: "Intermediate aggregation of sales per genre."
+    description: "Aggregated sales per genre: total units sold and revenue."
     columns:
       - name: genre_id
-        description: "Identifier for the genre."
+        description: "Genre identifier (grain column)."
         tests:
           - not_null
           - unique
@@ -137,11 +149,12 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
+
   - name: int_media_sales
-    description: "Intermediate aggregation of sales per media type."
+    description: "Aggregated sales per media type: total units sold and revenue."
     columns:
       - name: media_type_id
-        description: "Identifier for the media type."
+        description: "Media type identifier (grain column)."
         tests:
           - not_null
           - unique
@@ -157,29 +170,3 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
-  - name: int_daily_sales
-    description: "Intermediate daily sales aggregation (feeds fact_daily_sales)."
-    columns:
-      - name: sales_date
-        description: "Date of sales aggregation."
-        tests:
-          - not_null
-          - unique
-      - name: revenue
-        description: "Total revenue for the day."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: lines
-        description: "Total number of invoice lines for the day."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-      - name: invoices
-        description: "Total number of distinct invoices for the day."
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0" 

@@ -8,7 +8,7 @@ final as (
         albumid as album_id,
         mediatypeid as media_type_id,
         genreid as genre_id,
-        composer,
+        trim(composer) as composer,
         milliseconds as duration_ms,
         bytes as file_size,
         unitprice as list_price

@@ -4,26 +4,17 @@ with customer as (
 final as (
     select
         customerid as customer_id,
-        firstname as first_name,
-        lastname as last_name,
-        company,
-        address,
-        city,
-        state,
-        upper(country) as country,  -- Standardize country names
-        postalcode as postal_code,
-        case 
-            when phone is null then 'Unknown'
-            else phone 
-        end as phone,  -- Handle NULL phone numbers
-        case 
-            when fax is null then 'Unknown'
-            else fax 
-        end as fax,  -- Handle NULL fax numbers
-        case 
-            when email is null then 'Unknown'
-            else lower(email)  -- Standardize email to lowercase
-        end as email,
+        trim(firstname) as first_name,
+        trim(lastname) as last_name,
+        trim(company) as company,
+        trim(address) as address,
+        trim(city) as city,
+        trim(state) as state,
+        upper(trim(country)) as country,
+        trim(postalcode) as postal_code,
+        trim(phone) as phone,
+        trim(fax) as fax,
+        lower(trim(email)) as email,
         supportrepid as support_rep_id
     from customer
 )

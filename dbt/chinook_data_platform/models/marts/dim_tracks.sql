@@ -1,5 +1,6 @@
 with tracks as (
-    select * from {{ ref('stg_track') }}
+    select track_id, track_name, list_price, duration_ms, file_size, album_id, genre_id, media_type_id, composer
+    from {{ ref('stg_track') }}
 ),
 album as (
     select album_id, album_title, artist_id
@@ -23,10 +24,13 @@ sales as (
 ),
 final as (
     select
+        {{ dbt_utils.generate_surrogate_key(['tr.track_id']) }} as track_key,
         tr.track_id,
         tr.track_name,
+        tr.composer,
         tr.list_price,
         tr.duration_ms,
+        round(tr.duration_ms / 60000.0, 2) as duration_minutes,
         tr.file_size,
         tr.album_id,
         al.album_title,
@@ -36,11 +40,14 @@ final as (
         g.genre_name,
         tr.media_type_id,
         m.media_type_name,
-        coalesce(sales.units_sold,0) as units_sold,
-        coalesce(sales.revenue,0) as revenue,
+        coalesce(sales.units_sold, 0) as units_sold,
+        coalesce(sales.revenue, 0) as revenue,
         sales.first_sold_date,
         sales.last_sold_date,
-        case when coalesce(sales.units_sold,0) = 0 then null else round(coalesce(sales.revenue,0)/sales.units_sold,2) end as avg_sale_price
+        case
+            when coalesce(sales.units_sold, 0) = 0 then null
+            else round(coalesce(sales.revenue, 0) / sales.units_sold, 2)
+        end as avg_sale_price
     from tracks tr
     left join album al on tr.album_id = al.album_id
     left join artist ar on al.artist_id = ar.artist_id
@@ -48,4 +55,4 @@ final as (
     left join media m on tr.media_type_id = m.media_type_id
     left join sales on tr.track_id = sales.track_id
 )
-select * from final 
+select * from final

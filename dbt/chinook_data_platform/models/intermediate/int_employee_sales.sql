@@ -11,7 +11,7 @@ reps as (
     from {{ ref('stg_employee') }}
 ),
 il as (
-    select invoice_id, sale_price, quantity
+    select invoice_id, line_total
     from {{ ref('stg_invoice_line') }}
 ),
 joined as (
@@ -22,7 +22,7 @@ joined as (
         reps.title,
         inv.invoice_id,
         inv.invoice_date,
-        il.sale_price * il.quantity as line_revenue
+        il.line_total
     from inv
     join customers c on inv.customer_id = c.customer_id
     join reps on c.support_rep_id = reps.employee_id
@@ -34,10 +34,10 @@ aggregated as (
         first_name,
         last_name,
         title,
-        sum(line_revenue) as revenue,
+        sum(line_total) as revenue,
         count(distinct invoice_id) as invoices_handled,
         count(*) as lines_handled
     from joined
-    group by 1,2,3,4
+    group by employee_id, first_name, last_name, title
 )
-select * from aggregated 
+select * from aggregated
