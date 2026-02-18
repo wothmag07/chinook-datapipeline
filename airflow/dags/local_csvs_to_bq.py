@@ -3,31 +3,43 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 from google.cloud import bigquery
 import os
+import logging
 from airflow.datasets import Dataset
 
-# Environment variable checks
-PROJECT_ID = os.getenv("PROJECT_ID")
-DB_NAME = os.getenv("DB_NAME")
+log = logging.getLogger(__name__)
 
-if not PROJECT_ID or not DB_NAME:
-    raise ValueError(
-        "Required environment variables PROJECT_ID or DB_NAME are not set. "
-        "Please configure them in your Airflow environment."
-    )
+PROJECT_ID = os.getenv("PROJECT_ID", "")
+DB_NAME = os.getenv("DB_NAME", "")
 
-# Define the dataset that represents the raw chinook data in BigQuery
 chinook_raw_data_bq = Dataset(f"bq://{PROJECT_ID}/{DB_NAME}")
 
-def create_bq_dataset(project_id, dataset_name, location="US"):
-    client = bigquery.Client(project=project_id)
-    dataset_id = f"{project_id}.{dataset_name}"
-    dataset = bigquery.Dataset(dataset_id)
-    dataset.location = location
-    client.create_dataset(dataset, exists_ok=True)
 
-def load_csv_to_bq(dataset_name, table_name, csv_path, project_id):
+def _validate_env_vars():
+    """Validate required environment variables at task runtime, not parse time."""
+    project_id = os.getenv("PROJECT_ID")
+    db_name = os.getenv("DB_NAME")
+    if not project_id or not db_name:
+        raise ValueError(
+            "Required environment variables PROJECT_ID and DB_NAME are not set. "
+            "Please configure them in your Airflow environment."
+        )
+    return project_id, db_name
+
+
+def create_bq_dataset(**kwargs):
+    project_id, db_name = _validate_env_vars()
     client = bigquery.Client(project=project_id)
-    table_id = f"{project_id}.{dataset_name}.{table_name}"
+    dataset_id = f"{project_id}.{db_name}"
+    dataset = bigquery.Dataset(dataset_id)
+    dataset.location = "US"
+    client.create_dataset(dataset, exists_ok=True)
+    log.info("Dataset %s created/verified.", dataset_id)
+
+
+def load_csv_to_bq(table_name, csv_path, **kwargs):
+    project_id, db_name = _validate_env_vars()
+    client = bigquery.Client(project=project_id)
+    table_id = f"{project_id}.{db_name}.{table_name}"
 
     job_config = bigquery.LoadJobConfig(
         source_format=bigquery.SourceFormat.CSV,
@@ -42,26 +54,45 @@ def load_csv_to_bq(dataset_name, table_name, csv_path, project_id):
             table_id,
             job_config=job_config,
         )
-    job.result()  # Wait for the job to complete
+    job.result()
+
+    table = client.get_table(table_id)
+    log.info("Loaded %d rows into %s.", table.num_rows, table_id)
+
+
+def on_failure_callback(context):
+    """Log failure details. Extend with Slack/email notification as needed."""
+    task_instance = context.get("task_instance")
+    log.error(
+        "Task %s in DAG %s failed. Execution date: %s",
+        task_instance.task_id,
+        task_instance.dag_id,
+        context.get("execution_date"),
+    )
+
 
 default_args = {
-    'start_date': datetime(2024, 1, 1),
+    "owner": "data_engineer",
+    "depends_on_past": False,
+    "start_date": datetime(2024, 1, 1),
+    "retries": 2,
+    "retry_delay": 60,
+    "on_failure_callback": on_failure_callback,
 }
 
 with DAG(
     dag_id="local_csvs_to_bigquery",
+    description="Loads local CSV files into BigQuery raw dataset",
     default_args=default_args,
-    schedule=None
+    schedule=None,
+    catchup=False,
+    tags=["ingestion", "chinook"],
+    outlets=[chinook_raw_data_bq],
 ) as dag:
-    
-    create_dataset = PythonOperator(
+
+    create_dataset_task = PythonOperator(
         task_id="create_bq_dataset",
         python_callable=create_bq_dataset,
-        op_kwargs={
-            "project_id": PROJECT_ID,
-            "dataset_name": DB_NAME,
-            "location": "US",
-        },
     )
 
     csv_table_map = {
@@ -84,12 +115,9 @@ with DAG(
             task_id=f"load_{table_name}_csv",
             python_callable=load_csv_to_bq,
             op_kwargs={
-                "dataset_name": DB_NAME,
                 "table_name": table_name,
                 "csv_path": f"/opt/airflow/data/{csv_file}",
-                "project_id": PROJECT_ID,
             },
         )
-        create_dataset >> task
+        create_dataset_task >> task
         load_tasks.append(task)
-

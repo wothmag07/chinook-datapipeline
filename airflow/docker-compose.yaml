@@ -60,9 +60,9 @@ x-airflow-common:
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__FERNET_KEY: '${AIRFLOW__CORE__FERNET_KEY}'
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
@@ -76,13 +76,13 @@ x-airflow-common:
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
     GOOGLE_APPLICATION_CREDENTIALS: /keys/gcp-sa.json
   volumes:
-    - D:\Workspace\chinook-data-platform\airflow\dags:/opt/airflow/dags
-    - D:\Workspace\chinook-data-platform\airflow\logs:/opt/airflow/logs
-    - D:\Workspace\chinook-data-platform\airflow\config:/opt/airflow/config
-    - D:\Workspace\chinook-data-platform\airflow\plugins:/opt/airflow/plugins
-    - D:\Workspace\chinook-data-platform\data:/opt/airflow/data
-    - D:\Workspace\chinook-data-platform\keys\chinook-data-platform.json:/keys/gcp-sa.json
-    - D:\Workspace\chinook-data-platform\dbt\chinook_data_platform:/opt/airflow/dbt/chinook_data_platform
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./config:/opt/airflow/config
+    - ./plugins:/opt/airflow/plugins
+    - ../data:/opt/airflow/data
+    - ${GCP_SA_KEY_PATH}:/keys/gcp-sa.json
+    - ../dbt/chinook_data_platform:/opt/airflow/dbt/chinook_data_platform
   
 
   user: "${AIRFLOW_UID:-50000}:0"
@@ -298,8 +298,8 @@ services:
       <<: *airflow-common-env
       _AIRFLOW_DB_MIGRATE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
-      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
-      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _AIRFLOW_WWW_USER_USERNAME: '${_AIRFLOW_WWW_USER_USERNAME}'
+      _AIRFLOW_WWW_USER_PASSWORD: '${_AIRFLOW_WWW_USER_PASSWORD}'
       # _PIP_ADDITIONAL_REQUIREMENTS: 'apache-airflow-providers-google google-cloud-bigquery psycopg2-binary'
     user: "0:0"
 
