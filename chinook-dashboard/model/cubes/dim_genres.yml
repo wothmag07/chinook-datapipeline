@@ -1,0 +1,38 @@
+cubes:
+  - name: dim_genres
+    sql_table: chinook_db_marts.dim_genres
+    description: "Genre dimension with sales metrics."
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_units_sold
+        sql: units_sold
+        type: sum
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+    dimensions:
+      - name: genre_key
+        sql: genre_key
+        type: string
+        primary_key: true
+
+      - name: genre_id
+        sql: genre_id
+        type: number
+
+      - name: genre_name
+        sql: genre_name
+        type: string
+
+      - name: units_sold
+        sql: units_sold
+        type: number
+
+      - name: revenue
+        sql: revenue
+        type: number

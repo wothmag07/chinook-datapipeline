@@ -1,0 +1,42 @@
+views:
+  - name: sales_overview
+    description: "Analytical view combining sales facts with customer, track, and date dimensions."
+
+    cubes:
+      - join_path: fact_sales
+        includes:
+          - total_revenue
+          - total_quantity
+          - count
+          - unique_customers
+          - unique_tracks
+          - unique_invoices
+          - invoice_date
+
+      - join_path: fact_sales.dim_customers
+        prefix: true
+        includes:
+          - full_name
+          - company
+          - country
+          - city
+          - customer_lifetime_value
+
+      - join_path: fact_sales.dim_tracks
+        prefix: true
+        includes:
+          - track_name
+          - album_title
+          - artist_name
+          - genre_name
+          - media_type_name
+
+      - join_path: fact_sales.dim_date
+        prefix: true
+        includes:
+          - year
+          - month
+          - quarter
+          - month_name
+          - day_name
+          - is_weekend

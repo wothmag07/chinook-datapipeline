@@ -1,0 +1,40 @@
+views:
+  - name: customer_360
+    description: "Customer-centric analytical view with purchase history and support rep info."
+
+    cubes:
+      - join_path: fact_sales
+        includes:
+          - total_revenue
+          - total_quantity
+          - count
+          - unique_tracks
+          - unique_invoices
+
+      - join_path: fact_sales.dim_customers
+        prefix: true
+        includes:
+          - full_name
+          - email
+          - company
+          - country
+          - city
+          - state
+          - customer_lifetime_value
+          - order_count
+          - first_order_date
+          - last_order_date
+          - rep_first_name
+          - rep_last_name
+
+      - join_path: fact_sales.dim_genres
+        prefix: true
+        includes:
+          - genre_name
+
+      - join_path: fact_sales.dim_date
+        prefix: true
+        includes:
+          - year
+          - month
+          - quarter

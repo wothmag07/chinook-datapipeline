@@ -1,0 +1,106 @@
+cubes:
+  - name: dim_tracks
+    sql_table: chinook_db_marts.dim_tracks
+    description: "Track dimension enriched with album, artist, genre, media type, and sales metrics."
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_units_sold
+        sql: units_sold
+        type: sum
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+      - name: avg_list_price
+        sql: list_price
+        type: avg
+
+      - name: avg_duration_minutes
+        sql: duration_minutes
+        type: avg
+
+    dimensions:
+      - name: track_key
+        sql: track_key
+        type: string
+        primary_key: true
+
+      - name: track_id
+        sql: track_id
+        type: number
+
+      - name: track_name
+        sql: track_name
+        type: string
+
+      - name: composer
+        sql: composer
+        type: string
+
+      - name: list_price
+        sql: list_price
+        type: number
+
+      - name: duration_ms
+        sql: duration_ms
+        type: number
+
+      - name: duration_minutes
+        sql: duration_minutes
+        type: number
+
+      - name: file_size
+        sql: file_size
+        type: number
+
+      - name: album_id
+        sql: album_id
+        type: number
+
+      - name: album_title
+        sql: album_title
+        type: string
+
+      - name: artist_id
+        sql: artist_id
+        type: number
+
+      - name: artist_name
+        sql: artist_name
+        type: string
+
+      - name: genre_id
+        sql: genre_id
+        type: number
+
+      - name: genre_name
+        sql: genre_name
+        type: string
+
+      - name: media_type_id
+        sql: media_type_id
+        type: number
+
+      - name: media_type_name
+        sql: media_type_name
+        type: string
+
+      - name: units_sold
+        sql: units_sold
+        type: number
+
+      - name: revenue
+        sql: revenue
+        type: number
+
+      - name: first_sold_date
+        sql: first_sold_date
+        type: time
+
+      - name: last_sold_date
+        sql: last_sold_date
+        type: time

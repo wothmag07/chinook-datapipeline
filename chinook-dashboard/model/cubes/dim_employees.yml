@@ -1,0 +1,98 @@
+cubes:
+  - name: dim_employees
+    sql_table: chinook_db_marts.dim_employees
+    description: "Employee dimension with computed age, experience, and sales performance metrics."
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+      - name: total_invoices_handled
+        sql: invoices_handled
+        type: sum
+
+      - name: avg_revenue_per_employee
+        sql: revenue
+        type: avg
+
+    dimensions:
+      - name: employee_key
+        sql: employee_key
+        type: string
+        primary_key: true
+
+      - name: employee_id
+        sql: employee_id
+        type: number
+
+      - name: first_name
+        sql: first_name
+        type: string
+
+      - name: last_name
+        sql: last_name
+        type: string
+
+      - name: full_name
+        sql: full_name
+        type: string
+
+      - name: title
+        sql: title
+        type: string
+
+      - name: reports_to
+        sql: reports_to
+        type: number
+
+      - name: birth_date
+        sql: birth_date
+        type: time
+
+      - name: age
+        sql: age
+        type: number
+
+      - name: hire_date
+        sql: hire_date
+        type: time
+
+      - name: experience_years
+        sql: experience_years
+        type: number
+
+      - name: city
+        sql: city
+        type: string
+
+      - name: state
+        sql: state
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: email
+        sql: email
+        type: string
+
+      - name: revenue
+        sql: revenue
+        type: number
+
+      - name: invoices_handled
+        sql: invoices_handled
+        type: number
+
+      - name: lines_handled
+        sql: lines_handled
+        type: number
+
+      - name: avg_revenue_per_invoice
+        sql: avg_revenue_per_invoice
+        type: number

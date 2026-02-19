@@ -1,0 +1,38 @@
+cubes:
+  - name: dim_media_types
+    sql_table: chinook_db_marts.dim_media_types
+    description: "Media type dimension with sales metrics."
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_units_sold
+        sql: units_sold
+        type: sum
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+    dimensions:
+      - name: media_type_key
+        sql: media_type_key
+        type: string
+        primary_key: true
+
+      - name: media_type_id
+        sql: media_type_id
+        type: number
+
+      - name: media_type_name
+        sql: media_type_name
+        type: string
+
+      - name: units_sold
+        sql: units_sold
+        type: number
+
+      - name: revenue
+        sql: revenue
+        type: number

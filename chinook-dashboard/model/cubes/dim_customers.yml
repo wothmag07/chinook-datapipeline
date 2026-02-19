@@ -1,0 +1,110 @@
+cubes:
+  - name: dim_customers
+    sql_table: chinook_db_marts.dim_customers
+    description: "Customer dimension enriched with support rep info and lifetime value metrics."
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_lifetime_value
+        sql: customer_lifetime_value
+        type: sum
+
+      - name: avg_lifetime_value
+        sql: customer_lifetime_value
+        type: avg
+
+      - name: total_orders
+        sql: order_count
+        type: sum
+
+      - name: avg_order_value
+        sql: avg_order_value
+        type: avg
+
+    dimensions:
+      - name: customer_key
+        sql: customer_key
+        type: string
+        primary_key: true
+
+      - name: customer_id
+        sql: customer_id
+        type: number
+
+      - name: first_name
+        sql: first_name
+        type: string
+
+      - name: last_name
+        sql: last_name
+        type: string
+
+      - name: full_name
+        sql: full_name
+        type: string
+
+      - name: company
+        sql: company
+        type: string
+
+      - name: address
+        sql: address
+        type: string
+
+      - name: city
+        sql: city
+        type: string
+
+      - name: state
+        sql: state
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: postal_code
+        sql: postal_code
+        type: string
+
+      - name: email
+        sql: email
+        type: string
+
+      - name: phone
+        sql: phone
+        type: string
+
+      - name: support_rep_id
+        sql: support_rep_id
+        type: number
+
+      - name: rep_first_name
+        sql: rep_first_name
+        type: string
+
+      - name: rep_last_name
+        sql: rep_last_name
+        type: string
+
+      - name: rep_title
+        sql: rep_title
+        type: string
+
+      - name: customer_lifetime_value
+        sql: customer_lifetime_value
+        type: number
+
+      - name: order_count
+        sql: order_count
+        type: number
+
+      - name: first_order_date
+        sql: first_order_date
+        type: time
+
+      - name: last_order_date
+        sql: last_order_date
+        type: time

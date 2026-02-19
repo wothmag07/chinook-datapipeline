@@ -1,0 +1,67 @@
+cubes:
+  - name: bridge_playlist_track
+    sql_table: chinook_db_marts.bridge_playlist_track
+    description: "Bridge table linking playlists to tracks with denormalized track attributes."
+
+    joins:
+      - name: dim_tracks
+        sql: "{CUBE}.track_id = {dim_tracks.track_id}"
+        relationship: many_to_one
+
+    measures:
+      - name: count
+        type: count
+
+      - name: unique_playlists
+        sql: playlist_id
+        type: count_distinct
+
+      - name: unique_tracks
+        sql: track_id
+        type: count_distinct
+
+    dimensions:
+      - name: playlist_track_key
+        sql: playlist_track_key
+        type: string
+        primary_key: true
+
+      - name: playlist_id
+        sql: playlist_id
+        type: number
+
+      - name: playlist_name
+        sql: playlist_name
+        type: string
+
+      - name: track_id
+        sql: track_id
+        type: number
+
+      - name: track_name
+        sql: track_name
+        type: string
+
+      - name: list_price
+        sql: list_price
+        type: number
+
+      - name: duration_ms
+        sql: duration_ms
+        type: number
+
+      - name: album_title
+        sql: album_title
+        type: string
+
+      - name: artist_name
+        sql: artist_name
+        type: string
+
+      - name: genre_name
+        sql: genre_name
+        type: string
+
+      - name: media_type_name
+        sql: media_type_name
+        type: string

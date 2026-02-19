@@ -1,0 +1,78 @@
+cubes:
+  - name: dim_date
+    sql_table: chinook_db_marts.dim_date
+    description: "Calendar dimension generated from date spine (2005-2030)."
+
+    measures:
+      - name: count
+        type: count
+
+    dimensions:
+      - name: date_key
+        sql: date_key
+        type: string
+        primary_key: true
+
+      - name: date
+        sql: date
+        type: time
+
+      - name: year
+        sql: year
+        type: number
+
+      - name: month
+        sql: month
+        type: number
+
+      - name: day
+        sql: day
+        type: number
+
+      - name: year_month
+        sql: year_month
+        type: string
+
+      - name: date_iso
+        sql: date_iso
+        type: string
+
+      - name: day_name
+        sql: day_name
+        type: string
+
+      - name: month_name
+        sql: month_name
+        type: string
+
+      - name: iso_week
+        sql: iso_week
+        type: number
+
+      - name: quarter
+        sql: quarter
+        type: number
+
+      - name: day_of_year
+        sql: day_of_year
+        type: number
+
+      - name: day_of_week
+        sql: day_of_week
+        type: number
+
+      - name: first_day_of_month
+        sql: first_day_of_month
+        type: time
+
+      - name: last_day_of_month
+        sql: last_day_of_month
+        type: time
+
+      - name: first_day_of_week
+        sql: first_day_of_week
+        type: time
+
+      - name: is_weekend
+        sql: is_weekend
+        type: boolean

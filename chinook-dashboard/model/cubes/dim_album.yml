@@ -1,0 +1,46 @@
+cubes:
+  - name: dim_album
+    sql_table: chinook_db_marts.dim_album
+    description: "Album dimension enriched with artist info and sales metrics."
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_units_sold
+        sql: units_sold
+        type: sum
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+    dimensions:
+      - name: album_key
+        sql: album_key
+        type: string
+        primary_key: true
+
+      - name: album_id
+        sql: album_id
+        type: number
+
+      - name: album_title
+        sql: album_title
+        type: string
+
+      - name: artist_id
+        sql: artist_id
+        type: number
+
+      - name: artist_name
+        sql: artist_name
+        type: string
+
+      - name: units_sold
+        sql: units_sold
+        type: number
+
+      - name: revenue
+        sql: revenue
+        type: number

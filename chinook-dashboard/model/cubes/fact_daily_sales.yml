@@ -1,0 +1,59 @@
+cubes:
+  - name: fact_daily_sales
+    sql_table: chinook_db_marts.fact_daily_sales
+    description: "Daily aggregated sales fact. Grain: one row per calendar day with sales activity."
+
+    joins:
+      - name: dim_date
+        sql: "{CUBE}.sales_date = {dim_date.date}"
+        relationship: many_to_one
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+      - name: total_line_items
+        sql: line_items
+        type: sum
+
+      - name: total_invoices
+        sql: invoices
+        type: sum
+
+      - name: total_unique_customers
+        sql: unique_customers
+        type: sum
+
+      - name: avg_daily_revenue
+        sql: revenue
+        type: avg
+
+      - name: avg_order_value
+        sql: avg_order_value
+        type: avg
+
+    dimensions:
+      - name: sales_date
+        sql: sales_date
+        type: time
+        primary_key: true
+
+      - name: revenue
+        sql: revenue
+        type: number
+
+      - name: line_items
+        sql: line_items
+        type: number
+
+      - name: invoices
+        sql: invoices
+        type: number
+
+      - name: unique_customers
+        sql: unique_customers
+        type: number

@@ -1,0 +1,119 @@
+cubes:
+  - name: fact_sales
+    sql_table: chinook_db_marts.fact_sales
+    description: "Line-level sales fact table. Grain: one row per invoice line item."
+
+    joins:
+      - name: dim_customers
+        sql: "{CUBE}.customer_id = {dim_customers.customer_id}"
+        relationship: many_to_one
+
+      - name: dim_employees
+        sql: "{CUBE}.employee_id = {dim_employees.employee_id}"
+        relationship: many_to_one
+
+      - name: dim_tracks
+        sql: "{CUBE}.track_id = {dim_tracks.track_id}"
+        relationship: many_to_one
+
+      - name: dim_album
+        sql: "{CUBE}.album_id = {dim_album.album_id}"
+        relationship: many_to_one
+
+      - name: dim_genres
+        sql: "{CUBE}.genre_id = {dim_genres.genre_id}"
+        relationship: many_to_one
+
+      - name: dim_media_types
+        sql: "{CUBE}.media_type_id = {dim_media_types.media_type_id}"
+        relationship: many_to_one
+
+      - name: dim_date
+        sql: "{CUBE}.invoice_date = {dim_date.date}"
+        relationship: many_to_one
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_revenue
+        sql: revenue
+        type: sum
+
+      - name: total_quantity
+        sql: quantity
+        type: sum
+
+      - name: avg_revenue
+        sql: revenue
+        type: avg
+
+      - name: avg_sale_price
+        sql: sale_price
+        type: avg
+
+      - name: unique_customers
+        sql: customer_id
+        type: count_distinct
+
+      - name: unique_tracks
+        sql: track_id
+        type: count_distinct
+
+      - name: unique_invoices
+        sql: invoice_id
+        type: count_distinct
+
+    dimensions:
+      - name: sale_key
+        sql: sale_key
+        type: string
+        primary_key: true
+
+      - name: invoice_line_id
+        sql: invoice_line_id
+        type: number
+
+      - name: invoice_id
+        sql: invoice_id
+        type: number
+
+      - name: track_id
+        sql: track_id
+        type: number
+
+      - name: album_id
+        sql: album_id
+        type: number
+
+      - name: genre_id
+        sql: genre_id
+        type: number
+
+      - name: media_type_id
+        sql: media_type_id
+        type: number
+
+      - name: customer_id
+        sql: customer_id
+        type: number
+
+      - name: employee_id
+        sql: employee_id
+        type: number
+
+      - name: invoice_date
+        sql: invoice_date
+        type: time
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      - name: sale_price
+        sql: sale_price
+        type: number
+
+      - name: revenue
+        sql: revenue
+        type: number
