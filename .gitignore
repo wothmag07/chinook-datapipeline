@@ -11,14 +11,12 @@ ENV/
 pip-cache/
 pip-log.txt
 .Python
-*.sage.py
 
 # Node.js
 node_modules/
 npm-debug.log
 yarn-error.log
-package-lock.json # Sometimes committed, sometimes not. Add if you don't want to commit.
-# If you want to commit package-lock.json, remove the line above.
+package-lock.json
 
 # IDE/Editor
 .vscode/
@@ -39,27 +37,26 @@ Desktop.ini
 keys/
 *.env
 .env.*
-!/.env.example # Allow .env.example files
+!.env.example
 secrets/
 credentials/
 *.pem
 *.key
+profiles.yml
 
+# Airflow
+airflow/logs/
+*.pid
 
-# # Airflow
-# logs/ # Airflow logs directory (can conflict with dbt logs if not careful with paths)
-# *.pid # Airflow PIDs
-# __pycache__/ # Already covered by Python section
-# .airflowignore # Usually committed, specifies files Airflow DAG processor should ignore
+# dbt
+target/
+dbt_packages/
+dbt/logs/
+.user.yml
 
-# Data files (if large or regenerated)
+# Data files (large or regenerated)
 data/*.csv
-data/*.json 
-
-# Terraform
-# .terraform/
-# *.tfstate
-# *.tfstate.*
+data/*.json
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -71,8 +68,4 @@ data/*.json
 
 # Build artifacts
 dist/
-build/ 
-
-package-lock.json
-
-schema/
+build/
