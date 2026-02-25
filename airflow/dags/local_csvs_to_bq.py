@@ -87,7 +87,6 @@ with DAG(
     schedule=None,
     catchup=False,
     tags=["ingestion", "chinook"],
-    outlets=[chinook_raw_data_bq],
 ) as dag:
 
     create_dataset_task = PythonOperator(
@@ -118,6 +117,7 @@ with DAG(
                 "table_name": table_name,
                 "csv_path": f"/opt/airflow/data/{csv_file}",
             },
+            outlets=[chinook_raw_data_bq],
         )
         create_dataset_task >> task
         load_tasks.append(task)

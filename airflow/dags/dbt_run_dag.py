@@ -59,10 +59,11 @@ with DAG(
         bash_command=f"cd {DBT_PROJECT_DIR} && dbt test",
     )
 
-    dbt_freshness = BashOperator(
-        task_id="dbt_source_freshness",
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt source freshness",
-    )
+    # Disabled: Chinook data is static (2009-2013), invoice freshness always fails
+    # dbt_freshness = BashOperator(
+    #     task_id="dbt_source_freshness",
+    #     bash_command=f"cd {DBT_PROJECT_DIR} && dbt source freshness",
+    # )
 
     dbt_deps >> dbt_build >> dbt_test
-    dbt_deps >> dbt_freshness
+    # dbt_deps >> dbt_freshness
