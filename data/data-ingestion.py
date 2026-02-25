@@ -6,7 +6,7 @@ import pandas as pd
 os.makedirs("data", exist_ok=True)
 
 # Load JSON with UTF-8 encoding
-with open("ChinookData.json", "r", encoding="utf-8") as f:
+with open("data\ChinookData.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
 # Write each table to CSV under the 'data/' directory
