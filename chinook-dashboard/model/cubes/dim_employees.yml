@@ -1,6 +1,6 @@
 cubes:
   - name: dim_employees
-    sql_table: chinook_db_marts.dim_employees
+    sql_table: chinook_db_dev_marts.dim_employees
     description: "Employee dimension with computed age, experience, and sales performance metrics."
 
     measures:

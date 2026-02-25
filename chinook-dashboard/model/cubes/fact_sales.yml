@@ -1,6 +1,6 @@
 cubes:
   - name: fact_sales
-    sql_table: chinook_db_marts.fact_sales
+    sql_table: chinook_db_dev_marts.fact_sales
     description: "Line-level sales fact table. Grain: one row per invoice line item."
 
     joins:

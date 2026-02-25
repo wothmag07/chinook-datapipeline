@@ -1,6 +1,6 @@
 cubes:
   - name: dim_date
-    sql_table: chinook_db_marts.dim_date
+    sql_table: chinook_db_dev_marts.dim_date
     description: "Calendar dimension generated from date spine (2005-2030)."
 
     measures:

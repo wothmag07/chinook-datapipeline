@@ -1,6 +1,6 @@
 cubes:
   - name: dim_customers
-    sql_table: chinook_db_marts.dim_customers
+    sql_table: chinook_db_dev_marts.dim_customers
     description: "Customer dimension enriched with support rep info and lifetime value metrics."
 
     measures:

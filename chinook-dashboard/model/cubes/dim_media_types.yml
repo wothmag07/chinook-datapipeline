@@ -1,6 +1,6 @@
 cubes:
   - name: dim_media_types
-    sql_table: chinook_db_marts.dim_media_types
+    sql_table: chinook_db_dev_marts.dim_media_types
     description: "Media type dimension with sales metrics."
 
     measures:

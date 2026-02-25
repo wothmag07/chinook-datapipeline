@@ -1,6 +1,6 @@
 cubes:
   - name: fact_daily_sales
-    sql_table: chinook_db_marts.fact_daily_sales
+    sql_table: chinook_db_dev_marts.fact_daily_sales
     description: "Daily aggregated sales fact. Grain: one row per calendar day with sales activity."
 
     joins:

@@ -1,6 +1,6 @@
 cubes:
   - name: bridge_playlist_track
-    sql_table: chinook_db_marts.bridge_playlist_track
+    sql_table: chinook_db_dev_marts.bridge_playlist_track
     description: "Bridge table linking playlists to tracks with denormalized track attributes."
 
     joins:

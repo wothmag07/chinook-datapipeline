@@ -1,6 +1,6 @@
 cubes:
   - name: dim_tracks
-    sql_table: chinook_db_marts.dim_tracks
+    sql_table: chinook_db_dev_marts.dim_tracks
     description: "Track dimension enriched with album, artist, genre, media type, and sales metrics."
 
     measures:

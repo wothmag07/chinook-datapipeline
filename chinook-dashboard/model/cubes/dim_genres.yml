@@ -1,6 +1,6 @@
 cubes:
   - name: dim_genres
-    sql_table: chinook_db_marts.dim_genres
+    sql_table: chinook_db_dev_marts.dim_genres
     description: "Genre dimension with sales metrics."
 
     measures:

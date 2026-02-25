@@ -1,6 +1,6 @@
 cubes:
   - name: dim_album
-    sql_table: chinook_db_marts.dim_album
+    sql_table: chinook_db_dev_marts.dim_album
     description: "Album dimension enriched with artist info and sales metrics."
 
     measures:
