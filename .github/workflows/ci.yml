@@ -1,0 +1,77 @@
+name: CI - dbt Compile & Lint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "dbt/**"
+      - "airflow/**"
+      - "chinook-dashboard/**"
+      - ".github/workflows/ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "dbt/**"
+
+jobs:
+  dbt-compile:
+    name: dbt Compile Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt/chinook_data_platform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install dbt-bigquery==1.7.7
+
+      - name: Install dbt packages
+        run: dbt deps
+        env:
+          DBT_BQ_PROJECT: ci-placeholder
+          DBT_BQ_KEYFILE: /dev/null
+
+      - name: dbt compile (syntax check)
+        run: dbt compile
+        env:
+          DBT_BQ_PROJECT: ci-placeholder
+          DBT_BQ_KEYFILE: /dev/null
+
+  yaml-lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint dbt YAML files
+        run: |
+          yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}}}" \
+            dbt/chinook_data_platform/models/ \
+            dbt/chinook_data_platform/dbt_project.yml \
+            dbt/chinook_data_platform/packages.yml
+
+      - name: Lint Cube.js YAML files
+        run: |
+          yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}}}" \
+            chinook-dashboard/model/
