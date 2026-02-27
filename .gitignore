@@ -35,6 +35,7 @@ Desktop.ini
 
 # Sensitive information
 keys/
+sa-keys/
 *.env
 .env.*
 !.env.example
